@@ -1,9 +1,9 @@
 import { IsString, IsNotEmpty } from 'class-validator';
-import { Transform } from 'class-transformer';
+import { IsNotBlank } from '../../common/decorators/is-not-blank.decorator.js';
 
 export class CreateUserDto {
   @IsString({ message: 'Name must be a string' })
-  @Transform(({ value }) => (typeof value === 'string' ? value.trim() : value))
+  @IsNotBlank({ message: 'Name should not be blank' })
   @IsNotEmpty({ message: 'Name must not be empty' })
   name: string;
 }
