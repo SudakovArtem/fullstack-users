@@ -8,6 +8,7 @@ import {
 } from '@nestjs/common';
 import { UsersService } from './users.service.js';
 import { CreateUserDto } from './dto/index.js';
+import { ParsePositiveIntPipe } from '../common/validators/parse-positive-int-pipe.decorator.js';
 
 @Controller('users')
 export class UsersController {
@@ -19,7 +20,7 @@ export class UsersController {
   }
 
   @Get(':id')
-  async findOne(@Param('id', ParseIntPipe) id: number) {
+  async findOne(@Param('id', ParsePositiveIntPipe) id: number) {
     return this.usersService.findOne(id);
   }
 
