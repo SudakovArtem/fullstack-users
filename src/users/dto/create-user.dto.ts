@@ -3,7 +3,6 @@ import { IsNotBlank } from '../../common/decorators/is-not-blank.decorator.js';
 import { Transform } from 'class-transformer';
 
 export class CreateUserDto {
-  @IsNotEmpty({ message: 'Name must not be empty' })
   @Transform(({ value }) => (typeof value === 'string' ? value.trim() : value))
   @IsString({ message: 'Name must be a string' })
   @IsNotBlank({ message: 'Name should not be blank' })
