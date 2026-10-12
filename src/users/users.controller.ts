@@ -1,6 +1,14 @@
-import { Body, Controller, Get, Param, Post, Header } from '@nestjs/common';
+import {
+  Body,
+  Controller,
+  Get,
+  Param,
+  Post,
+  Header,
+  ConflictException,
+} from '@nestjs/common';
 import { UsersService } from './users.service.js';
-import { CreateUserDto } from './dto/index.js';
+import { CreateUserDocumentDto } from './dto/index.js';
 import { ParsePositiveIntPipe } from '../common/pipes/parse-positive-int.pipe.js';
 import { UserJsonApiSerializer } from './presentation/json-api/user-json-api.serializer.js';
 
@@ -26,7 +34,16 @@ export class UsersController {
   }
 
   @Post()
-  async create(@Body() createUserDto: CreateUserDto) {
-    return this.usersService.create(createUserDto);
+  @Header('Content-Type', 'application/vnd.api+json')
+  async create(@Body() document: CreateUserDocumentDto) {
+    const { type, attributes } = document.data;
+    if (type !== 'users') {
+      throw new ConflictException(
+        `Resource type "${type}" does not match endpoint "users"`,
+      );
+    }
+
+    const user = await this.usersService.create(attributes);
+    return this.userJsonApiSerializer.serialize(user);
   }
 }

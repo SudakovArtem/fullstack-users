@@ -5,7 +5,7 @@ import {
   HttpException,
 } from '@nestjs/common';
 import { STATUS_CODES } from 'node:http';
-import type { Request, Response } from 'express';
+import type { Response } from 'express';
 
 type JsonApiError = {
   status: string;
