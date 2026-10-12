@@ -1,4 +1,4 @@
-import { ValidationError } from 'class-validator';
+import type { ValidationError } from 'class-validator';
 
 export type ValidationIssue = {
   detail: string;
@@ -40,22 +40,9 @@ function buildPointer(
   path: string[],
   error: ValidationError,
 ): string | undefined {
-  if (isMissingValueError(error)) {
+  if (error.value === undefined) {
     return undefined;
   }
 
   return '/' + path.join('/');
-}
-
-function isMissingValueError(error: ValidationError): boolean {
-  if (!error.constraints) return false;
-
-  const keys = Object.keys(error.constraints);
-  return keys.every(
-    (key) =>
-      key === 'isDefined' ||
-      key === 'whitelistValidation' ||
-      key === 'isNotEmpty' ||
-      key === 'isNotBlank',
-  );
 }
