@@ -9,5 +9,6 @@ import { UserJsonApiSerializer } from './presentation/json-api/user-json-api.ser
   imports: [TypeOrmModule.forFeature([UserEntity])],
   providers: [UsersService, UserJsonApiSerializer],
   controllers: [UsersController],
+  exports: [UsersService],
 })
 export class UsersModule {}
