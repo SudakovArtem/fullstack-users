@@ -3,8 +3,15 @@ import { BadRequestException } from '@nestjs/common';
 export const KNOWN_PROJECT_INCLUDES = ['owner'] as const;
 export type ProjectInclude = (typeof KNOWN_PROJECT_INCLUDES)[number];
 
-export function parseIncludeQuery(raw: string | undefined): ProjectInclude[] {
-  if (!raw) return [];
+export type IncludeQuery = {
+  requested: boolean;
+  includes: ProjectInclude[];
+};
+
+export function parseIncludeQuery(raw: string | undefined): IncludeQuery {
+  if (raw === undefined) {
+    return { requested: false, includes: [] };
+  }
 
   const parts = raw
     .split(',')
@@ -22,5 +29,5 @@ export function parseIncludeQuery(raw: string | undefined): ProjectInclude[] {
     result.add(part as ProjectInclude);
   }
 
-  return [...result];
+  return { requested: true, includes: [...result] };
 }

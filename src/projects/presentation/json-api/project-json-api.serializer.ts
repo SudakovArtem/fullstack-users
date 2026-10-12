@@ -1,7 +1,10 @@
 import { Injectable } from '@nestjs/common';
 import { ProjectEntity } from '../../entities/project.entity.js';
-import type { ProjectInclude } from '../query/parse-include-query.js';
 import { UserJsonApiSerializer } from '../../../users/presentation/json-api/user-json-api.serializer.js';
+import type {
+  IncludeQuery,
+  ProjectInclude,
+} from '../query/parse-include-query.js';
 
 @Injectable()
 export class ProjectJsonApiSerializer {
@@ -11,26 +14,17 @@ export class ProjectJsonApiSerializer {
     return {
       type: 'projects',
       id: String(project.id),
-      attributes: {
-        name: project.name,
-      },
+      attributes: { name: project.name },
       relationships: {
         owner: {
-          data: {
-            type: 'users',
-            id: String(project.owner.id),
-          },
+          data: { type: 'users', id: String(project.owner.id) },
         },
       },
-      links: {
-        self: `/projects/${project.id}`,
-      },
+      links: { self: `/projects/${project.id}` },
     };
   }
 
   private buildIncluded(projects: ProjectEntity[], includes: ProjectInclude[]) {
-    if (includes.length === 0) return undefined;
-
     const seen = new Set<string>();
     const included: ReturnType<UserJsonApiSerializer['serializeResource']>[] =
       [];
@@ -50,37 +44,44 @@ export class ProjectJsonApiSerializer {
       }
     }
 
-    return included.length > 0 ? included : undefined;
+    return included;
   }
 
-  serialize(project: ProjectEntity, includes: ProjectInclude[] = []) {
-    const data = this.getProjectResourceObject(project);
-    const included = this.buildIncluded([project], includes);
-
-    return {
-      data,
-      ...(included ? { included } : {}),
-      links: {
-        self: `/projects/${project.id}`,
-      },
-    };
-  }
-
-  serializeCollection(
-    projects: ProjectEntity[],
-    includes: ProjectInclude[] = [],
+  private buildDocument(
+    data: unknown,
+    projectsForIncluded: ProjectEntity[],
+    include: IncludeQuery,
+    selfLink: string,
   ) {
-    const data = projects.map((project) =>
-      this.getProjectResourceObject(project),
-    );
-    const included = this.buildIncluded(projects, includes);
+    const document: Record<string, unknown> = { data };
 
-    return {
-      data,
-      ...(included ? { included } : {}),
-      links: {
-        self: `/projects`,
-      },
-    };
+    if (include.requested) {
+      document.included = this.buildIncluded(
+        projectsForIncluded,
+        include.includes,
+      );
+    }
+
+    document.links = { self: selfLink };
+
+    return document;
+  }
+
+  serialize(project: ProjectEntity, include: IncludeQuery) {
+    return this.buildDocument(
+      this.getProjectResourceObject(project),
+      [project],
+      include,
+      `/projects/${project.id}`,
+    );
+  }
+
+  serializeCollection(projects: ProjectEntity[], include: IncludeQuery) {
+    return this.buildDocument(
+      projects.map((project) => this.getProjectResourceObject(project)),
+      projects,
+      include,
+      '/projects',
+    );
   }
 }
