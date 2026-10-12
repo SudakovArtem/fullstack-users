@@ -7,7 +7,10 @@ import { ProjectsController } from './projects.controller.js';
 import { ProjectJsonApiSerializer } from './presentation/json-api/project-json-api.serializer.js';
 
 @Module({
-  imports: [TypeOrmModule.forFeature([ProjectEntity]), UsersModule],
+  imports: [
+    TypeOrmModule.forFeature([ProjectEntity]),
+    UsersModule,
+  ],
   providers: [ProjectsService, ProjectJsonApiSerializer],
   controllers: [ProjectsController],
 })

@@ -6,9 +6,11 @@ import {
   Header,
   Param,
   Post,
+  Query,
 } from '@nestjs/common';
 import { ProjectsService } from './projects.service.js';
 import { CreateProjectDocumentDto } from './dto/index.js';
+import { parseIncludeQuery } from './presentation/query/parse-include-query.js';
 import { ParsePositiveIntPipe } from '../common/pipes/parse-positive-int.pipe.js';
 import { ProjectJsonApiSerializer } from './presentation/json-api/project-json-api.serializer.js';
 
@@ -21,16 +23,24 @@ export class ProjectsController {
 
   @Get()
   @Header('Content-Type', 'application/vnd.api+json')
-  async findAll() {
+  async findAll(@Query('include') include?: string) {
+    const includes = parseIncludeQuery(include);
     const projects = await this.projectsService.findAll();
-    return this.projectJsonApiSerializer.serializeCollection(projects);
+    return this.projectJsonApiSerializer.serializeCollection(
+      projects,
+      includes,
+    );
   }
 
   @Get(':id')
   @Header('Content-Type', 'application/vnd.api+json')
-  async findOne(@Param('id', ParsePositiveIntPipe) id: number) {
+  async findOne(
+    @Param('id', ParsePositiveIntPipe) id: number,
+    @Query('include') include?: string,
+  ) {
+    const includes = parseIncludeQuery(include);
     const project = await this.projectsService.findOne(id);
-    return this.projectJsonApiSerializer.serialize(project);
+    return this.projectJsonApiSerializer.serialize(project, includes);
   }
 
   @Post()
