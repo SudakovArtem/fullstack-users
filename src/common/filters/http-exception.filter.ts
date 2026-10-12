@@ -6,15 +6,22 @@ import {
 } from '@nestjs/common';
 import { STATUS_CODES } from 'node:http';
 import type { Response } from 'express';
+import type { ValidationIssue } from '../validation/validation-error.mapper.js';
 
 type JsonApiError = {
   status: string;
   title: string;
   detail: string;
+  source?: { pointer: string };
 };
 
 type JsonApiErrorDocument = {
   errors: JsonApiError[];
+};
+
+type StructuredResponse = {
+  validationIssues?: ValidationIssue[];
+  message?: unknown;
 };
 
 @Catch(HttpException)
@@ -23,23 +30,46 @@ export class HttpExceptionFilter implements ExceptionFilter<HttpException> {
     const context = host.switchToHttp();
     const response = context.getResponse<Response>();
     const statusCode = exception.getStatus();
-
-    const messages = this.getExceptionMessages(
-      exception.getResponse(),
-      exception.message,
-    );
-
     const title = this.getHttpStatusTitle(statusCode);
 
-    const body: JsonApiErrorDocument = {
-      errors: messages.map((detail) => ({
-        status: String(statusCode),
-        title,
-        detail,
-      })),
-    };
+    const errors = this.toJsonApiErrors(exception, statusCode, title);
 
-    response.status(statusCode).type('application/vnd.api+json').json(body);
+    response
+      .status(statusCode)
+      .type('application/vnd.api+json')
+      .json({ errors } satisfies JsonApiErrorDocument);
+  }
+
+  private toJsonApiErrors(
+    exception: HttpException,
+    statusCode: number,
+    title: string,
+  ): JsonApiError[] {
+    const raw = exception.getResponse();
+
+    if (typeof raw === 'object' && raw !== null) {
+      const maybe = raw as StructuredResponse;
+      if (Array.isArray(maybe.validationIssues)) {
+        return maybe.validationIssues.map((issue) => {
+          const error: JsonApiError = {
+            status: String(statusCode),
+            title,
+            detail: issue.detail,
+          };
+          if (issue.pointer) {
+            error.source = { pointer: issue.pointer };
+          }
+          return error;
+        });
+      }
+    }
+
+    const messages = this.getExceptionMessages(raw, exception.message);
+    return messages.map((detail) => ({
+      status: String(statusCode),
+      title,
+      detail,
+    }));
   }
 
   private getExceptionMessages(
