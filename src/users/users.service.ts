@@ -1,5 +1,8 @@
 import { Injectable, NotFoundException } from '@nestjs/common';
-import { CreateUserAttributesDto } from './dto/index.js';
+import {
+  CreateUserAttributesDto,
+  UpdateUserAttributesDto,
+} from './dto/index.js';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import { UserEntity } from './entities/user.entity.js';
@@ -29,6 +32,26 @@ export class UsersService {
       name: attributes.name,
       email: attributes.email ?? null,
     });
+    return this.usersRepository.save(user);
+  }
+
+  async update(
+    id: number,
+    attributes: UpdateUserAttributesDto,
+  ): Promise<UserEntity> {
+    const user = await this.usersRepository.findOneBy({ id });
+    if (!user) {
+      throw new NotFoundException(`Пользователь с ID ${id} не найден`);
+    }
+
+    if (attributes.name !== undefined) {
+      user.name = attributes.name;
+    }
+
+    if (attributes.email !== undefined) {
+      user.email = attributes.email;
+    }
+
     return this.usersRepository.save(user);
   }
 }

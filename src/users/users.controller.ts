@@ -6,9 +6,10 @@ import {
   Post,
   Header,
   ConflictException,
+  Patch,
 } from '@nestjs/common';
 import { UsersService } from './users.service.js';
-import { CreateUserDocumentDto } from './dto/index.js';
+import { CreateUserDocumentDto, UpdateUserDocumentDto } from './dto/index.js';
 import { ParsePositiveIntPipe } from '../common/pipes/parse-positive-int.pipe.js';
 import { UserJsonApiSerializer } from './presentation/json-api/user-json-api.serializer.js';
 
@@ -44,6 +45,29 @@ export class UsersController {
     }
 
     const user = await this.usersService.create(attributes);
+    return this.userJsonApiSerializer.serialize(user);
+  }
+
+  @Patch(':id')
+  @Header('Content-Type', 'application/vnd.api+json')
+  async update(
+    @Param('id', ParsePositiveIntPipe) id: number,
+    @Body() document: UpdateUserDocumentDto,
+  ) {
+    const { type, id: bodyId, attributes } = document.data;
+    if (type !== 'users') {
+      throw new ConflictException(
+        `Resource type "${type}" does not match endpoint "users"`,
+      );
+    }
+
+    if (bodyId !== String(id)) {
+      throw new ConflictException(
+        `Resource id "${bodyId}" does not match URL id "${id}"`,
+      );
+    }
+
+    const user = await this.usersService.update(id, attributes);
     return this.userJsonApiSerializer.serialize(user);
   }
 }
