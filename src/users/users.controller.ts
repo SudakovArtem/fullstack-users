@@ -7,6 +7,8 @@ import {
   Header,
   ConflictException,
   Patch,
+  Delete,
+  HttpCode,
 } from '@nestjs/common';
 import { UsersService } from './users.service.js';
 import { CreateUserDocumentDto, UpdateUserDocumentDto } from './dto/index.js';
@@ -69,5 +71,11 @@ export class UsersController {
 
     const user = await this.usersService.update(id, attributes);
     return this.userJsonApiSerializer.serialize(user);
+  }
+
+  @Delete(':id')
+  @HttpCode(204)
+  async remove(@Param('id', ParsePositiveIntPipe) id: number): Promise<void> {
+    await this.usersService.remove(id);
   }
 }
