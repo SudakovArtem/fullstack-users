@@ -25,11 +25,10 @@ export class ProjectsController {
   @Header('Content-Type', 'application/vnd.api+json')
   async findAll(@Query('include') include?: string) {
     const includeQuery = parseIncludeQuery(include);
-    const projects = await this.projectsService.findAll();
-    return this.projectJsonApiSerializer.serializeCollection(
-      projects,
-      includeQuery,
-    );
+    const projects = await this.projectsService.findAll({
+      loadOwner: includeQuery.includes.includes('owner'),
+    });
+    return this.projectJsonApiSerializer.serializeCollection(projects, includeQuery);
   }
 
   @Get(':id')
@@ -39,7 +38,9 @@ export class ProjectsController {
     @Query('include') include?: string,
   ) {
     const includeQuery = parseIncludeQuery(include);
-    const project = await this.projectsService.findOne(id);
+    const project = await this.projectsService.findOne(id, {
+      loadOwner: includeQuery.includes.includes('owner'),
+    });
     return this.projectJsonApiSerializer.serialize(project, includeQuery);
   }
 

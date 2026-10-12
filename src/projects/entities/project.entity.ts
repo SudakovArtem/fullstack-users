@@ -15,6 +15,9 @@ export class ProjectEntity {
   @Column({ type: 'text' })
   name: string;
 
+  @Column({ name: 'owner_id', type: 'integer' })
+  ownerId: number;
+
   @ManyToOne(() => UserEntity, { onDelete: 'RESTRICT', nullable: false })
   @JoinColumn({ name: 'owner_id' })
   owner: UserEntity;

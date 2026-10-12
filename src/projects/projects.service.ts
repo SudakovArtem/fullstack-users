@@ -4,6 +4,10 @@ import { Repository } from 'typeorm';
 import { ProjectEntity } from './entities/project.entity.js';
 import { UsersService } from '../users/users.service.js';
 
+export type FindProjectsOptions = {
+  loadOwner?: boolean;
+};
+
 @Injectable()
 export class ProjectsService {
   constructor(
@@ -12,16 +16,19 @@ export class ProjectsService {
     private readonly usersService: UsersService,
   ) {}
 
-  findAll(): Promise<ProjectEntity[]> {
+  findAll(options: FindProjectsOptions = {}): Promise<ProjectEntity[]> {
     return this.projectsRepository.find({
-      relations: { owner: true },
+      relations: options.loadOwner ? { owner: true } : undefined,
     });
   }
 
-  async findOne(id: number): Promise<ProjectEntity> {
+  async findOne(
+    id: number,
+    options: FindProjectsOptions = {},
+  ): Promise<ProjectEntity> {
     const project = await this.projectsRepository.findOne({
       where: { id },
-      relations: { owner: true },
+      relations: options.loadOwner ? { owner: true } : undefined,
     });
 
     if (!project) {
@@ -38,10 +45,11 @@ export class ProjectsService {
     const owner = await this.usersService.findOne(input.ownerId);
     const project = this.projectsRepository.create({
       name: input.name,
+      ownerId: owner.id,
       owner,
     });
 
     const saved = await this.projectsRepository.save(project);
-    return this.findOne(saved.id);
+    return saved;
   }
 }

@@ -17,7 +17,7 @@ export class ProjectJsonApiSerializer {
       attributes: { name: project.name },
       relationships: {
         owner: {
-          data: { type: 'users', id: String(project.owner.id) },
+          data: { type: 'users', id: String(project.ownerId) },
         },
       },
       links: { self: `/projects/${project.id}` },
