@@ -39,11 +39,7 @@ export class UsersService {
     id: number,
     attributes: UpdateUserAttributesDto,
   ): Promise<UserEntity> {
-    const user = await this.usersRepository.findOneBy({ id });
-    if (!user) {
-      throw new NotFoundException(`Пользователь с ID ${id} не найден`);
-    }
-
+    const user = await this.findOne(id);
     if (attributes.name !== undefined) {
       user.name = attributes.name;
     }
