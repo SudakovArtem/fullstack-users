@@ -1,4 +1,4 @@
-import { IsString, IsNotEmpty, IsOptional, IsEmail } from 'class-validator';
+import { IsNotEmpty, IsString } from 'class-validator';
 import { Transform } from 'class-transformer';
 import { IsNotBlank } from '../../common/decorators/is-not-blank.decorator.js';
 
