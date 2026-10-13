@@ -5,16 +5,19 @@ import {
   Get,
   Header,
   Param,
+  Patch,
   Post,
   Query,
 } from '@nestjs/common';
 import { ProjectMembersService } from './project-members.service.js';
-import { CreateProjectMemberDocumentDto } from './dto/index.js';
+import {
+  CreateProjectMemberDocumentDto,
+  UpdateProjectMemberDocumentDto,
+} from './dto/index.js';
 import { ParsePositiveIntPipe } from '../common/pipes/parse-positive-int.pipe.js';
 import { ProjectMemberJsonApiSerializer } from './presentation/json-api/project-member-json-api.serializer.js';
 import { parseIncludeQuery } from '../common/json-api/parse-include-query.js';
-
-export const KNOWN_PROJECT_MEMBERS_INCLUDES = ['user'] as const;
+import { PROJECT_MEMBER_INCLUDES } from './presentation/query/project-member-includes.js';
 
 @Controller('projects/:projectId/members')
 export class ProjectMembersController {
@@ -29,10 +32,7 @@ export class ProjectMembersController {
     @Param('projectId', ParsePositiveIntPipe) projectId: number,
     @Query('include') include?: string,
   ) {
-    const includeQuery = parseIncludeQuery(
-      include,
-      KNOWN_PROJECT_MEMBERS_INCLUDES,
-    );
+    const includeQuery = parseIncludeQuery(include, PROJECT_MEMBER_INCLUDES);
     const members = await this.projectMembersService.findAllByProject(
       projectId,
       {
@@ -53,10 +53,7 @@ export class ProjectMembersController {
     @Param('userId', ParsePositiveIntPipe) userId: number,
     @Query('include') include?: string,
   ) {
-    const includeQuery = parseIncludeQuery(
-      include,
-      KNOWN_PROJECT_MEMBERS_INCLUDES,
-    );
+    const includeQuery = parseIncludeQuery(include, PROJECT_MEMBER_INCLUDES);
     const member = await this.projectMembersService.findOne(projectId, userId, {
       loadUser: includeQuery.includes.includes('user'),
     });
@@ -90,6 +87,45 @@ export class ProjectMembersController {
       role: attributes.role,
     });
 
+    return this.projectMemberJsonApiSerializer.serialize(member, {
+      requested: false,
+      includes: [],
+    });
+  }
+
+  @Patch(':userId')
+  @Header('Content-Type', 'application/vnd.api+json')
+  async update(
+    @Param('projectId', ParsePositiveIntPipe) projectId: number,
+    @Param('userId', ParsePositiveIntPipe) userId: number,
+    @Body() document: UpdateProjectMemberDocumentDto,
+  ) {
+    const { type, id: bodyId, attributes } = document.data;
+    if (type !== 'project-members') {
+      throw new ConflictException(
+        `Resource type "${type}" does not match endpoint "project-members"`,
+      );
+    }
+
+    const [projectBodyId, userBodyId] = bodyId.split(':');
+
+    if (projectBodyId !== String(projectId)) {
+      throw new ConflictException(
+        `Resource id "${projectBodyId}" does not match URL id "${projectId}"`,
+      );
+    }
+
+    if (userBodyId !== String(userId)) {
+      throw new ConflictException(
+        `Resource id "${userBodyId}" does not match URL id "${userId}"`,
+      );
+    }
+
+    const member = await this.projectMembersService.update(
+      projectId,
+      userId,
+      attributes,
+    );
     return this.projectMemberJsonApiSerializer.serialize(member, {
       requested: false,
       includes: [],

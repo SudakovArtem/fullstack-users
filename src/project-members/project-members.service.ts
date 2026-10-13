@@ -11,6 +11,7 @@ import {
 } from './entities/project-member.entity.js';
 import { ProjectsService } from '../projects/projects.service.js';
 import { UsersService } from '../users/users.service.js';
+import { UpdateProjectMemberAttributesDto } from './dto/index.js';
 
 const PG_UNIQUE_VIOLATION = '23505';
 
@@ -91,5 +92,21 @@ export class ProjectMembersService {
 
     const driverError = error.driverError as { code?: string } | undefined;
     return driverError?.code === PG_UNIQUE_VIOLATION;
+  }
+
+  async update(
+    projectId: number,
+    userId: number,
+    attributes: UpdateProjectMemberAttributesDto,
+  ): Promise<ProjectMemberEntity> {
+    await this.projectsService.findOne(projectId);
+    await this.usersService.findOne(userId);
+
+    const member = await this.findOne(projectId, userId);
+    if (attributes.role !== undefined) {
+      member.role = attributes.role;
+    }
+
+    return this.membersRepository.save(member);
   }
 }
