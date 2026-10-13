@@ -4,7 +4,7 @@ import { ProjectEntity } from '../../projects/entities/project.entity.js';
 
 export type ProjectMemberRole = 'admin' | 'member' | 'viewer';
 
-@Entity('projects')
+@Entity('project_members')
 export class ProjectMemberEntity {
   @PrimaryColumn({ name: 'project_id', type: 'integer' })
   projectId: number;
@@ -15,7 +15,11 @@ export class ProjectMemberEntity {
   @Column({ type: 'text', default: 'member' })
   role: ProjectMemberRole;
 
-  @Column({ name: 'joined_at', type: 'timestamp' })
+  @Column({
+    name: 'joined_at',
+    type: 'timestamptz',
+    default: () => 'now()',
+  })
   joinedAt: Date;
 
   @ManyToOne(() => ProjectEntity, { onDelete: 'CASCADE', nullable: false })
