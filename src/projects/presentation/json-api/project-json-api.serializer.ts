@@ -4,7 +4,7 @@ import { UserJsonApiSerializer } from '../../../users/presentation/json-api/user
 import type {
   IncludeQuery,
   ProjectInclude,
-} from '../query/parse-include-query.js';
+} from '../../../common/json-api/parse-include-query.js';
 
 @Injectable()
 export class ProjectJsonApiSerializer {

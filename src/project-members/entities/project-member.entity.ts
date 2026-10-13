@@ -1,4 +1,11 @@
-import { Column, Entity, JoinColumn, ManyToOne, PrimaryColumn } from 'typeorm';
+import {
+  Column,
+  CreateDateColumn,
+  Entity,
+  JoinColumn,
+  ManyToOne,
+  PrimaryColumn,
+} from 'typeorm';
 import { UserEntity } from '../../users/entities/user.entity.js';
 import { ProjectEntity } from '../../projects/entities/project.entity.js';
 
@@ -15,10 +22,9 @@ export class ProjectMemberEntity {
   @Column({ type: 'text', default: 'member' })
   role: ProjectMemberRole;
 
-  @Column({
+  @CreateDateColumn({
     name: 'joined_at',
     type: 'timestamptz',
-    default: () => 'now()',
   })
   joinedAt: Date;
 

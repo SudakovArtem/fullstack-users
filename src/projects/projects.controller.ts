@@ -10,7 +10,7 @@ import {
 } from '@nestjs/common';
 import { ProjectsService } from './projects.service.js';
 import { CreateProjectDocumentDto } from './dto/index.js';
-import { parseIncludeQuery } from './presentation/query/parse-include-query.js';
+import { parseIncludeQuery } from '../common/json-api/parse-include-query.js';
 import { ParsePositiveIntPipe } from '../common/pipes/parse-positive-int.pipe.js';
 import { ProjectJsonApiSerializer } from './presentation/json-api/project-json-api.serializer.js';
 
@@ -28,7 +28,10 @@ export class ProjectsController {
     const projects = await this.projectsService.findAll({
       loadOwner: includeQuery.includes.includes('owner'),
     });
-    return this.projectJsonApiSerializer.serializeCollection(projects, includeQuery);
+    return this.projectJsonApiSerializer.serializeCollection(
+      projects,
+      includeQuery,
+    );
   }
 
   @Get(':id')
