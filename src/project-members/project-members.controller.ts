@@ -6,11 +6,15 @@ import {
   Header,
   Param,
   Post,
+  Query,
 } from '@nestjs/common';
 import { ProjectMembersService } from './project-members.service.js';
 import { CreateProjectMemberDocumentDto } from './dto/index.js';
 import { ParsePositiveIntPipe } from '../common/pipes/parse-positive-int.pipe.js';
 import { ProjectMemberJsonApiSerializer } from './presentation/json-api/project-member-json-api.serializer.js';
+import { parseIncludeQuery } from '../common/json-api/parse-include-query.js';
+
+export const KNOWN_PROJECT_MEMBERS_INCLUDES = ['user'] as const;
 
 @Controller('projects/:projectId/members')
 export class ProjectMembersController {
@@ -21,12 +25,24 @@ export class ProjectMembersController {
 
   @Get()
   @Header('Content-Type', 'application/vnd.api+json')
-  async findAll(@Param('projectId', ParsePositiveIntPipe) projectId: number) {
-    const members =
-      await this.projectMembersService.findAllByProject(projectId);
+  async findAll(
+    @Param('projectId', ParsePositiveIntPipe) projectId: number,
+    @Query('include') include?: string,
+  ) {
+    const includeQuery = parseIncludeQuery(
+      include,
+      KNOWN_PROJECT_MEMBERS_INCLUDES,
+    );
+    const members = await this.projectMembersService.findAllByProject(
+      projectId,
+      {
+        loadUser: includeQuery.includes.includes('user'),
+      },
+    );
     return this.projectMemberJsonApiSerializer.serializeCollection(
       members,
       projectId,
+      includeQuery,
     );
   }
 
@@ -35,9 +51,16 @@ export class ProjectMembersController {
   async findOne(
     @Param('projectId', ParsePositiveIntPipe) projectId: number,
     @Param('userId', ParsePositiveIntPipe) userId: number,
+    @Query('include') include?: string,
   ) {
-    const member = await this.projectMembersService.findOne(projectId, userId);
-    return this.projectMemberJsonApiSerializer.serialize(member);
+    const includeQuery = parseIncludeQuery(
+      include,
+      KNOWN_PROJECT_MEMBERS_INCLUDES,
+    );
+    const member = await this.projectMembersService.findOne(projectId, userId, {
+      loadUser: includeQuery.includes.includes('user'),
+    });
+    return this.projectMemberJsonApiSerializer.serialize(member, includeQuery);
   }
 
   @Post()
@@ -67,6 +90,9 @@ export class ProjectMembersController {
       role: attributes.role,
     });
 
-    return this.projectMemberJsonApiSerializer.serialize(member);
+    return this.projectMemberJsonApiSerializer.serialize(member, {
+      requested: false,
+      includes: [],
+    });
   }
 }

@@ -1,14 +1,14 @@
 import { BadRequestException } from '@nestjs/common';
 
-export const KNOWN_PROJECT_INCLUDES = ['owner'] as const;
-export type ProjectInclude = (typeof KNOWN_PROJECT_INCLUDES)[number];
-
-export type IncludeQuery = {
+export type IncludeQuery<T extends readonly string[]> = {
   requested: boolean;
-  includes: ProjectInclude[];
+  includes: T[number][];
 };
 
-export function parseIncludeQuery(raw: string | undefined): IncludeQuery {
+export function parseIncludeQuery<T extends readonly string[]>(
+  raw: string | undefined,
+  allowedIncludes: T,
+): IncludeQuery<T> {
   if (raw === undefined) {
     return { requested: false, includes: [] };
   }
@@ -18,15 +18,15 @@ export function parseIncludeQuery(raw: string | undefined): IncludeQuery {
     .map((s) => s.trim())
     .filter((s) => s.length > 0);
 
-  const result = new Set<ProjectInclude>();
+  const result = new Set<T[number]>();
 
   for (const part of parts) {
-    if (!KNOWN_PROJECT_INCLUDES.includes(part as ProjectInclude)) {
+    if (!allowedIncludes.includes(part)) {
       throw new BadRequestException(
-        `Unknown include "${part}". Supported: ${KNOWN_PROJECT_INCLUDES.join(', ')}`,
+        `Unknown include "${part}". Supported: ${allowedIncludes.join(', ')}`,
       );
     }
-    result.add(part as ProjectInclude);
+    result.add(part);
   }
 
   return { requested: true, includes: [...result] };

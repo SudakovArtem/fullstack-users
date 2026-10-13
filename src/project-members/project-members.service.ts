@@ -14,6 +14,10 @@ import { UsersService } from '../users/users.service.js';
 
 const PG_UNIQUE_VIOLATION = '23505';
 
+export type FindProjectsMembersOptions = {
+  loadUser?: boolean;
+};
+
 @Injectable()
 export class ProjectMembersService {
   constructor(
@@ -23,21 +27,26 @@ export class ProjectMembersService {
     private readonly usersService: UsersService,
   ) {}
 
-  async findAllByProject(projectId: number): Promise<ProjectMemberEntity[]> {
+  async findAllByProject(
+    projectId: number,
+    options?: FindProjectsMembersOptions,
+  ): Promise<ProjectMemberEntity[]> {
     await this.projectsService.findOne(projectId);
     return this.membersRepository.find({
       where: { projectId },
+      relations: options?.loadUser ? { user: true } : undefined,
     });
   }
 
   async findOne(
     projectId: number,
     userId: number,
+    options?: FindProjectsMembersOptions,
   ): Promise<ProjectMemberEntity> {
     await this.projectsService.findOne(projectId);
-    const member = await this.membersRepository.findOneBy({
-      projectId,
-      userId,
+    const member = await this.membersRepository.findOne({
+      where: { projectId, userId },
+      relations: options?.loadUser ? { user: true } : undefined,
     });
     if (!member) {
       throw new NotFoundException(

@@ -14,6 +14,8 @@ import { parseIncludeQuery } from '../common/json-api/parse-include-query.js';
 import { ParsePositiveIntPipe } from '../common/pipes/parse-positive-int.pipe.js';
 import { ProjectJsonApiSerializer } from './presentation/json-api/project-json-api.serializer.js';
 
+export const KNOWN_PROJECT_INCLUDES = ['owner'] as const;
+
 @Controller('projects')
 export class ProjectsController {
   constructor(
@@ -24,7 +26,7 @@ export class ProjectsController {
   @Get()
   @Header('Content-Type', 'application/vnd.api+json')
   async findAll(@Query('include') include?: string) {
-    const includeQuery = parseIncludeQuery(include);
+    const includeQuery = parseIncludeQuery(include, KNOWN_PROJECT_INCLUDES);
     const projects = await this.projectsService.findAll({
       loadOwner: includeQuery.includes.includes('owner'),
     });
@@ -40,7 +42,7 @@ export class ProjectsController {
     @Param('id', ParsePositiveIntPipe) id: number,
     @Query('include') include?: string,
   ) {
-    const includeQuery = parseIncludeQuery(include);
+    const includeQuery = parseIncludeQuery(include, KNOWN_PROJECT_INCLUDES);
     const project = await this.projectsService.findOne(id, {
       loadOwner: includeQuery.includes.includes('owner'),
     });

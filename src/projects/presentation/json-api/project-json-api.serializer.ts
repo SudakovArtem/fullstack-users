@@ -1,10 +1,8 @@
 import { Injectable } from '@nestjs/common';
 import { ProjectEntity } from '../../entities/project.entity.js';
 import { UserJsonApiSerializer } from '../../../users/presentation/json-api/user-json-api.serializer.js';
-import type {
-  IncludeQuery,
-  ProjectInclude,
-} from '../../../common/json-api/parse-include-query.js';
+import type { IncludeQuery } from '../../../common/json-api/parse-include-query.js';
+import { KNOWN_PROJECT_INCLUDES } from '../../projects.controller.js';
 
 @Injectable()
 export class ProjectJsonApiSerializer {
@@ -24,7 +22,10 @@ export class ProjectJsonApiSerializer {
     };
   }
 
-  private buildIncluded(projects: ProjectEntity[], includes: ProjectInclude[]) {
+  private buildIncluded(
+    projects: ProjectEntity[],
+    includes: (typeof KNOWN_PROJECT_INCLUDES)[number][],
+  ) {
     const seen = new Set<string>();
     const included: ReturnType<UserJsonApiSerializer['serializeResource']>[] =
       [];
@@ -50,7 +51,7 @@ export class ProjectJsonApiSerializer {
   private buildDocument(
     data: unknown,
     projectsForIncluded: ProjectEntity[],
-    include: IncludeQuery,
+    include: IncludeQuery<typeof KNOWN_PROJECT_INCLUDES>,
     selfLink: string,
   ) {
     const document: Record<string, unknown> = { data };
@@ -67,7 +68,10 @@ export class ProjectJsonApiSerializer {
     return document;
   }
 
-  serialize(project: ProjectEntity, include: IncludeQuery) {
+  serialize(
+    project: ProjectEntity,
+    include: IncludeQuery<typeof KNOWN_PROJECT_INCLUDES>,
+  ) {
     return this.buildDocument(
       this.getProjectResourceObject(project),
       [project],
@@ -76,7 +80,10 @@ export class ProjectJsonApiSerializer {
     );
   }
 
-  serializeCollection(projects: ProjectEntity[], include: IncludeQuery) {
+  serializeCollection(
+    projects: ProjectEntity[],
+    include: IncludeQuery<typeof KNOWN_PROJECT_INCLUDES>,
+  ) {
     return this.buildDocument(
       projects.map((project) => this.getProjectResourceObject(project)),
       projects,
