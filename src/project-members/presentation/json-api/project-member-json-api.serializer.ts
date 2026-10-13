@@ -37,4 +37,13 @@ export class ProjectMemberJsonApiSerializer {
       },
     };
   }
+
+  serializeCollection(members: ProjectMemberEntity[], projectId: number) {
+    return {
+      data: members.map((member) => this.serializeResource(member)),
+      links: {
+        self: `/projects/${projectId}/members`,
+      },
+    };
+  }
 }

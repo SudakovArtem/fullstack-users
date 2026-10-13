@@ -1,4 +1,8 @@
-import { ConflictException, Injectable } from '@nestjs/common';
+import {
+  ConflictException,
+  Injectable,
+  NotFoundException,
+} from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { QueryFailedError, Repository } from 'typeorm';
 import {
@@ -18,6 +22,31 @@ export class ProjectMembersService {
     private readonly projectsService: ProjectsService,
     private readonly usersService: UsersService,
   ) {}
+
+  async findAllByProject(projectId: number): Promise<ProjectMemberEntity[]> {
+    await this.projectsService.findOne(projectId);
+    return this.membersRepository.find({
+      where: { projectId },
+    });
+  }
+
+  async findOne(
+    projectId: number,
+    userId: number,
+  ): Promise<ProjectMemberEntity> {
+    await this.projectsService.findOne(projectId);
+    const member = await this.membersRepository.findOneBy({
+      projectId,
+      userId,
+    });
+    if (!member) {
+      throw new NotFoundException(
+        `Пользователь с ID ${userId} не является участником проекта с ID ${projectId}.`,
+      );
+    }
+
+    return member;
+  }
 
   async create(input: {
     projectId: number;

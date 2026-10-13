@@ -2,6 +2,7 @@ import {
   Body,
   ConflictException,
   Controller,
+  Get,
   Header,
   Param,
   Post,
@@ -17,6 +18,27 @@ export class ProjectMembersController {
     private readonly projectMembersService: ProjectMembersService,
     private readonly projectMemberJsonApiSerializer: ProjectMemberJsonApiSerializer,
   ) {}
+
+  @Get()
+  @Header('Content-Type', 'application/vnd.api+json')
+  async findAll(@Param('projectId', ParsePositiveIntPipe) projectId: number) {
+    const members =
+      await this.projectMembersService.findAllByProject(projectId);
+    return this.projectMemberJsonApiSerializer.serializeCollection(
+      members,
+      projectId,
+    );
+  }
+
+  @Get(':userId')
+  @Header('Content-Type', 'application/vnd.api+json')
+  async findOne(
+    @Param('projectId', ParsePositiveIntPipe) projectId: number,
+    @Param('userId', ParsePositiveIntPipe) userId: number,
+  ) {
+    const member = await this.projectMembersService.findOne(projectId, userId);
+    return this.projectMemberJsonApiSerializer.serialize(member);
+  }
 
   @Post()
   @Header('Content-Type', 'application/vnd.api+json')
