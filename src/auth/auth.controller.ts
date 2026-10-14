@@ -10,6 +10,8 @@ import {
 import { AuthService } from './auth.service.js';
 import { RegisterDto, LoginDto } from './dto/index.js';
 import { JwtAuthGuard } from './guards/jwt-auth.guard.js';
+import { CurrentUser } from './decorators/current-user.decorator.js';
+import type { AuthenticatedUser } from './types/authenticated-user.js';
 
 @Controller('auth')
 export class AuthController {
@@ -17,8 +19,10 @@ export class AuthController {
 
   @Get('me')
   @UseGuards(JwtAuthGuard)
-  me() {
-    return { ok: true };
+  me(@CurrentUser() user: AuthenticatedUser) {
+    return {
+      userId: user.id,
+    };
   }
 
   @Post('register')
