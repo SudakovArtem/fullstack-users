@@ -21,8 +21,9 @@ export class RemoveProjectMemberUseCase {
       const projectsRepository = manager.getRepository(ProjectEntity);
       const membersRepository = manager.getRepository(ProjectMemberEntity);
 
-      const project = await projectsRepository.findOneBy({
-        id: command.projectId,
+      const project = await projectsRepository.findOne({
+        where: { id: command.projectId },
+        lock: { mode: 'pessimistic_write' },
       });
       if (!project) {
         throw new NotFoundException(
