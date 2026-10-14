@@ -37,19 +37,4 @@ export class ProjectsService {
 
     return project;
   }
-
-  async create(input: {
-    name: string;
-    ownerId: number;
-  }): Promise<ProjectEntity> {
-    const owner = await this.usersService.findOne(input.ownerId);
-    const project = this.projectsRepository.create({
-      name: input.name,
-      ownerId: owner.id,
-      owner,
-    });
-
-    const saved = await this.projectsRepository.save(project);
-    return saved;
-  }
 }

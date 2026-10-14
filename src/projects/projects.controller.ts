@@ -14,11 +14,13 @@ import { parseIncludeQuery } from '../common/json-api/parse-include-query.js';
 import { ParsePositiveIntPipe } from '../common/pipes/parse-positive-int.pipe.js';
 import { ProjectJsonApiSerializer } from './presentation/json-api/project-json-api.serializer.js';
 import { PROJECT_INCLUDES } from './presentation/query/project-includes.js';
+import { CreateProjectUseCase } from './application/create-project.use-case.js';
 
 @Controller('projects')
 export class ProjectsController {
   constructor(
     private readonly projectsService: ProjectsService,
+    private readonly createProjectUseCase: CreateProjectUseCase,
     private readonly projectJsonApiSerializer: ProjectJsonApiSerializer,
   ) {}
 
@@ -66,7 +68,7 @@ export class ProjectsController {
       );
     }
 
-    const project = await this.projectsService.create({
+    const project = await this.createProjectUseCase.execute({
       name: attributes.name,
       ownerId: Number(ownerIdentifier.id),
     });
