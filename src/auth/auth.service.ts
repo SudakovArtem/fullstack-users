@@ -3,14 +3,26 @@ import {
   Injectable,
   UnauthorizedException,
 } from '@nestjs/common';
+import { JwtService } from '@nestjs/jwt';
 import * as argon2 from 'argon2';
 import { UsersService } from '../users/users.service.js';
 import { UserEntity } from '../users/entities/user.entity.js';
 import { RegisterDto, LoginDto } from './dto/index.js';
 
+export type AccessTokenPayload = {
+  sub: string;
+};
+
+export type LoginResult = {
+  accessToken: string;
+};
+
 @Injectable()
 export class AuthService {
-  constructor(private readonly usersService: UsersService) {}
+  constructor(
+    private readonly usersService: UsersService,
+    private readonly jwtService: JwtService,
+  ) {}
 
   async register(dto: RegisterDto): Promise<UserEntity> {
     const existing = await this.usersService.findByEmail(dto.email);
@@ -34,7 +46,7 @@ export class AuthService {
     }
   }
 
-  async login(dto: LoginDto): Promise<{ userId: number }> {
+  async login(dto: LoginDto): Promise<LoginResult> {
     const user = await this.usersService.findByEmail(dto.email);
 
     const invalidCredentials = () =>
@@ -56,7 +68,13 @@ export class AuthService {
       throw invalidCredentials();
     }
 
-    return { userId: user.id };
+    const payload: AccessTokenPayload = {
+      sub: String(user.id),
+    };
+
+    const accessToken = await this.jwtService.signAsync(payload);
+
+    return { accessToken };
   }
 
   private isUniqueViolation(error: unknown): boolean {
