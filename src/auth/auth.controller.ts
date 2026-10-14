@@ -9,7 +9,7 @@ import {
 } from '@nestjs/common';
 import { AuthService } from './auth.service.js';
 import { RegisterDto, LoginDto } from './dto/index.js';
-import { JwtAuthGuard } from './guards/jwt-auth.guard.js';
+import { JwtAuthGuard } from '../security/guards/jwt-auth.guard.js';
 import { CurrentUser } from './decorators/current-user.decorator.js';
 import type { AuthenticatedUser } from './types/authenticated-user.js';
 

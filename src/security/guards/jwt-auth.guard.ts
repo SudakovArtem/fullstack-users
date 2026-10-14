@@ -5,7 +5,7 @@ import {
   UnauthorizedException,
 } from '@nestjs/common';
 import { JwtService } from '@nestjs/jwt';
-import { AccessTokenPayload } from '../types/access-token-payload.js';
+import { AccessTokenPayload } from '../../auth/types/access-token-payload.js';
 import { UsersService } from '../../users/users.service.js';
 
 @Injectable()
@@ -59,7 +59,7 @@ export class JwtAuthGuard implements CanActivate {
 
     const userId = Number(payload.sub);
     if (!Number.isInteger(userId) || userId <= 0) {
-      throw new UnauthorizedException('Invalid token payload');
+      throw new UnauthorizedException();
     }
 
     const user = await this.usersService.findById(userId);

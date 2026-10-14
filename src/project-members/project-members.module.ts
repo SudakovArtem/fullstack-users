@@ -8,12 +8,14 @@ import { ProjectMembersService } from './project-members.service.js';
 import { ProjectMemberJsonApiSerializer } from './presentation/json-api/project-member-json-api.serializer.js';
 import { UpdateProjectMemberRoleUseCase } from './application/update-project-member-role.use-case.js';
 import { RemoveProjectMemberUseCase } from './application/remove-project-member.use-case.js';
+import { SecurityModule } from '../security/security.module.js';
 
 @Module({
   imports: [
     TypeOrmModule.forFeature([ProjectMemberEntity]),
     ProjectsModule,
     UsersModule,
+    SecurityModule,
   ],
   controllers: [ProjectMembersController],
   providers: [

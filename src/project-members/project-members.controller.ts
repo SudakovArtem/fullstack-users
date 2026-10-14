@@ -10,6 +10,7 @@ import {
   Patch,
   Post,
   Query,
+  UseGuards,
 } from '@nestjs/common';
 import { ProjectMembersService } from './project-members.service.js';
 import {
@@ -22,6 +23,9 @@ import { parseIncludeQuery } from '../common/json-api/parse-include-query.js';
 import { PROJECT_MEMBER_INCLUDES } from './presentation/query/project-member-includes.js';
 import { UpdateProjectMemberRoleUseCase } from './application/update-project-member-role.use-case.js';
 import { RemoveProjectMemberUseCase } from './application/remove-project-member.use-case.js';
+import { JwtAuthGuard } from '../security/guards/jwt-auth.guard.js';
+import { CurrentUser } from '../auth/decorators/current-user.decorator.js';
+import type { AuthenticatedUser } from '../auth/types/authenticated-user.js';
 
 @Controller('projects/:projectId/members')
 export class ProjectMembersController {
@@ -100,10 +104,12 @@ export class ProjectMembersController {
   }
 
   @Patch(':userId')
+  @UseGuards(JwtAuthGuard)
   @Header('Content-Type', 'application/vnd.api+json')
   async update(
     @Param('projectId', ParsePositiveIntPipe) projectId: number,
     @Param('userId', ParsePositiveIntPipe) userId: number,
+    @CurrentUser() currentUser: AuthenticatedUser,
     @Body() document: UpdateProjectMemberDocumentDto,
   ) {
     const { type, id: bodyId, attributes } = document.data;
@@ -128,6 +134,7 @@ export class ProjectMembersController {
     }
 
     const member = await this.updateRoleUseCase.execute({
+      actorUserId: currentUser.id,
       projectId,
       userId,
       role: attributes.role,

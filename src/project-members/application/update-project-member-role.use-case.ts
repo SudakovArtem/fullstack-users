@@ -1,5 +1,6 @@
 import {
   ConflictException,
+  ForbiddenException,
   Injectable,
   NotFoundException,
 } from '@nestjs/common';
@@ -11,6 +12,7 @@ import {
 } from '../entities/project-member.entity.js';
 
 export type UpdateProjectMemberRoleCommand = {
+  actorUserId: number;
   projectId: number;
   userId: number;
   role?: ProjectMemberRole;
@@ -35,6 +37,14 @@ export class UpdateProjectMemberRoleUseCase {
         throw new NotFoundException(
           `Проект с ID ${command.projectId} не найден`,
         );
+      }
+
+      const actorMembership = await membersRepository.findOneBy({
+        projectId: command.projectId,
+        userId: command.actorUserId,
+      });
+      if (!actorMembership || actorMembership.role !== 'admin') {
+        throw new ForbiddenException();
       }
 
       const member = await membersRepository.findOneBy({
