@@ -2,7 +2,6 @@ import { Injectable, NotFoundException } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import { ProjectEntity } from './entities/project.entity.js';
-import { UsersService } from '../users/users.service.js';
 
 export type FindProjectsOptions = {
   loadOwner?: boolean;
@@ -13,7 +12,6 @@ export class ProjectsService {
   constructor(
     @InjectRepository(ProjectEntity)
     private readonly projectsRepository: Repository<ProjectEntity>,
-    private readonly usersService: UsersService,
   ) {}
 
   findAll(options: FindProjectsOptions = {}): Promise<ProjectEntity[]> {

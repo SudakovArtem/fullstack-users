@@ -20,11 +20,15 @@ import { ParsePositiveIntPipe } from '../common/pipes/parse-positive-int.pipe.js
 import { ProjectMemberJsonApiSerializer } from './presentation/json-api/project-member-json-api.serializer.js';
 import { parseIncludeQuery } from '../common/json-api/parse-include-query.js';
 import { PROJECT_MEMBER_INCLUDES } from './presentation/query/project-member-includes.js';
+import { UpdateProjectMemberRoleUseCase } from './application/update-project-member-role.use-case.js';
+import { RemoveProjectMemberUseCase } from './application/remove-project-member.use-case.js';
 
 @Controller('projects/:projectId/members')
 export class ProjectMembersController {
   constructor(
     private readonly projectMembersService: ProjectMembersService,
+    private readonly updateRoleUseCase: UpdateProjectMemberRoleUseCase,
+    private readonly removeMemberUseCase: RemoveProjectMemberUseCase,
     private readonly projectMemberJsonApiSerializer: ProjectMemberJsonApiSerializer,
   ) {}
 
@@ -123,11 +127,11 @@ export class ProjectMembersController {
       );
     }
 
-    const member = await this.projectMembersService.update(
+    const member = await this.updateRoleUseCase.execute({
       projectId,
       userId,
-      attributes,
-    );
+      role: attributes.role,
+    });
     return this.projectMemberJsonApiSerializer.serialize(member, {
       requested: false,
       includes: [],
@@ -140,6 +144,6 @@ export class ProjectMembersController {
     @Param('projectId', ParsePositiveIntPipe) projectId: number,
     @Param('userId', ParsePositiveIntPipe) userId: number,
   ): Promise<void> {
-    await this.projectMembersService.remove(projectId, userId);
+    await this.removeMemberUseCase.execute({ projectId, userId });
   }
 }
