@@ -8,10 +8,7 @@ import * as argon2 from 'argon2';
 import { UsersService } from '../users/users.service.js';
 import { UserEntity } from '../users/entities/user.entity.js';
 import { RegisterDto, LoginDto } from './dto/index.js';
-
-export type AccessTokenPayload = {
-  sub: string;
-};
+import type { AccessTokenPayload } from './types/access-token-payload.js';
 
 export type LoginResult = {
   accessToken: string;

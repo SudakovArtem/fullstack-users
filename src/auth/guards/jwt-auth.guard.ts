@@ -15,6 +15,28 @@ export class JwtAuthGuard implements CanActivate {
     private readonly usersService: UsersService,
   ) {}
 
+  private extractTokenFromHeader(
+    authorization: string | undefined,
+  ): string | undefined {
+    if (!authorization) {
+      return undefined;
+    }
+
+    const parts = authorization.split(' ');
+    if (parts.length !== 2) return undefined;
+
+    const [scheme, token] = parts;
+    if (scheme !== 'Bearer') {
+      return undefined;
+    }
+
+    if (token.length === 0) {
+      return undefined;
+    }
+
+    return token;
+  }
+
   async canActivate(context: ExecutionContext): Promise<boolean> {
     const request = context.switchToHttp().getRequest();
     const authorization = request.headers.authorization;
@@ -22,8 +44,8 @@ export class JwtAuthGuard implements CanActivate {
       throw new UnauthorizedException();
     }
 
-    const [scheme, token] = authorization.split(' ');
-    if (scheme !== 'Bearer' || !token) {
+    const token = this.extractTokenFromHeader(authorization);
+    if (!token) {
       throw new UnauthorizedException();
     }
 
@@ -36,8 +58,8 @@ export class JwtAuthGuard implements CanActivate {
     }
 
     const userId = Number(payload.sub);
-    if (Number.isNaN(userId) || userId < 0) {
-      throw new UnauthorizedException();
+    if (!Number.isInteger(userId) || userId <= 0) {
+      throw new UnauthorizedException('Invalid token payload');
     }
 
     const user = await this.usersService.findById(userId);
