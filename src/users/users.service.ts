@@ -27,6 +27,10 @@ export class UsersService {
     return user;
   }
 
+  async findByEmail(email: string): Promise<UserEntity | null> {
+    return this.usersRepository.findOneBy({ email });
+  }
+
   async create(attributes: CreateUserAttributesDto): Promise<UserEntity> {
     const user = this.usersRepository.create({
       name: attributes.name,
@@ -48,6 +52,19 @@ export class UsersService {
       user.email = attributes.email;
     }
 
+    return this.usersRepository.save(user);
+  }
+
+  async createWithPassword(input: {
+    name: string;
+    email: string;
+    passwordHash: string;
+  }): Promise<UserEntity> {
+    const user = this.usersRepository.create({
+      name: input.name,
+      email: input.email,
+      passwordHash: input.passwordHash,
+    });
     return this.usersRepository.save(user);
   }
 

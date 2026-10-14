@@ -10,4 +10,7 @@ export class UserEntity {
 
   @Column({ type: 'text', nullable: true, unique: true })
   email: string | null;
+
+  @Column({ name: 'password_hash', type: 'text', nullable: true })
+  passwordHash: string | null;
 }
