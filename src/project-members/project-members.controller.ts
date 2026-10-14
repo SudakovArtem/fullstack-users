@@ -2,8 +2,10 @@ import {
   Body,
   ConflictException,
   Controller,
+  Delete,
   Get,
   Header,
+  HttpCode,
   Param,
   Patch,
   Post,
@@ -130,5 +132,14 @@ export class ProjectMembersController {
       requested: false,
       includes: [],
     });
+  }
+
+  @Delete(':userId')
+  @HttpCode(204)
+  async remove(
+    @Param('projectId', ParsePositiveIntPipe) projectId: number,
+    @Param('userId', ParsePositiveIntPipe) userId: number,
+  ): Promise<void> {
+    await this.projectMembersService.remove(projectId, userId);
   }
 }

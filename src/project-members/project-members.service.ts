@@ -106,4 +106,15 @@ export class ProjectMembersService {
 
     return this.membersRepository.save(member);
   }
+
+  async remove(projectId: number, userId: number): Promise<void> {
+    await this.findOne(projectId, userId);
+    const result = await this.membersRepository.delete({ projectId, userId });
+
+    if (result.affected === 0) {
+      throw new NotFoundException(
+        `Пользователь с ID ${userId} не является участником проекта с ID ${projectId}.`,
+      );
+    }
+  }
 }
