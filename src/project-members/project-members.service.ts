@@ -108,7 +108,7 @@ export class ProjectMembersService {
   }
 
   async remove(projectId: number, userId: number): Promise<void> {
-    await this.findOne(projectId, userId);
+    await this.projectsService.findOne(projectId);
     const result = await this.membersRepository.delete({ projectId, userId });
 
     if (result.affected === 0) {
