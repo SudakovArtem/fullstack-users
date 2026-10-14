@@ -1,9 +1,9 @@
-import { IsIn, IsOptional } from 'class-validator';
+import { IsIn, ValidateIf } from 'class-validator';
 import type { ProjectMemberRole } from '../entities/project-member.entity.js';
 import { PROJECT_MEMBER_ROLES } from './create-project-member-attributes.dto.js';
 
 export class UpdateProjectMemberAttributesDto {
-  @IsOptional()
+  @ValidateIf((_, value) => value !== undefined)
   @IsIn(PROJECT_MEMBER_ROLES, {
     message: `Role must be one of: ${PROJECT_MEMBER_ROLES.join(', ')}`,
   })

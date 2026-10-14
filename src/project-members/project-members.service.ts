@@ -99,9 +99,6 @@ export class ProjectMembersService {
     userId: number,
     attributes: UpdateProjectMemberAttributesDto,
   ): Promise<ProjectMemberEntity> {
-    await this.projectsService.findOne(projectId);
-    await this.usersService.findOne(userId);
-
     const member = await this.findOne(projectId, userId);
     if (attributes.role !== undefined) {
       member.role = attributes.role;
