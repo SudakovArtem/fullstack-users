@@ -39,14 +39,17 @@ export class ProjectMembersController {
   ) {}
 
   @Get()
+  @UseGuards(JwtAuthGuard)
   @Header('Content-Type', 'application/vnd.api+json')
   async findAll(
     @Param('projectId', ParsePositiveIntPipe) projectId: number,
+    @CurrentUser() currentUser: AuthenticatedUser,
     @Query('include') include?: string,
   ) {
     const includeQuery = parseIncludeQuery(include, PROJECT_MEMBER_INCLUDES);
-    const members = await this.projectMembersService.findAllByProject(
+    const members = await this.projectMembersService.findAllByProjectForUser(
       projectId,
+      currentUser.id,
       {
         loadUser: includeQuery.includes.includes('user'),
       },

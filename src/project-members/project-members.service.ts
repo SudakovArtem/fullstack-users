@@ -45,4 +45,18 @@ export class ProjectMembersService {
 
     return member;
   }
+
+  async findAllByProjectForUser(
+    projectId: number,
+    actorUserId: number,
+    options?: FindProjectsMembersOptions,
+  ): Promise<ProjectMemberEntity[]> {
+    await this.projectsService.findOneForUser(projectId, actorUserId);
+
+    return this.membersRepository.find({
+      where: { projectId },
+      order: { userId: 'ASC' },
+      relations: options?.loadUser ? { user: true } : undefined,
+    });
+  }
 }
