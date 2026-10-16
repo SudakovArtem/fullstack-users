@@ -26,11 +26,13 @@ import { RemoveProjectMemberUseCase } from './application/remove-project-member.
 import { JwtAuthGuard } from '../security/guards/jwt-auth.guard.js';
 import { CurrentUser } from '../auth/decorators/current-user.decorator.js';
 import type { AuthenticatedUser } from '../auth/types/authenticated-user.js';
+import { CreateProjectMemberUseCase } from './application/create-project-member.use-case.js';
 
 @Controller('projects/:projectId/members')
 export class ProjectMembersController {
   constructor(
     private readonly projectMembersService: ProjectMembersService,
+    private readonly createMemberUseCase: CreateProjectMemberUseCase,
     private readonly updateRoleUseCase: UpdateProjectMemberRoleUseCase,
     private readonly removeMemberUseCase: RemoveProjectMemberUseCase,
     private readonly projectMemberJsonApiSerializer: ProjectMemberJsonApiSerializer,
@@ -71,9 +73,11 @@ export class ProjectMembersController {
   }
 
   @Post()
+  @UseGuards(JwtAuthGuard)
   @Header('Content-Type', 'application/vnd.api+json')
   async create(
     @Param('projectId', ParsePositiveIntPipe) projectId: number,
+    @CurrentUser() currentUser: AuthenticatedUser,
     @Body() document: CreateProjectMemberDocumentDto,
   ) {
     const { type, attributes, relationships } = document.data;
@@ -84,14 +88,14 @@ export class ProjectMembersController {
         `Resource type "${type}" does not match endpoint "project-members"`,
       );
     }
-
     if (userIdentifier.type !== 'users') {
       throw new ConflictException(
         `Related resource type "${userIdentifier.type}" does not match "users"`,
       );
     }
 
-    const member = await this.projectMembersService.create({
+    const member = await this.createMemberUseCase.execute({
+      actorUserId: currentUser.id,
       projectId,
       userId: Number(userIdentifier.id),
       role: attributes.role,
@@ -113,23 +117,16 @@ export class ProjectMembersController {
     @Body() document: UpdateProjectMemberDocumentDto,
   ) {
     const { type, id: bodyId, attributes } = document.data;
+
     if (type !== 'project-members') {
       throw new ConflictException(
         `Resource type "${type}" does not match endpoint "project-members"`,
       );
     }
-
-    const [projectBodyId, userBodyId] = bodyId.split(':');
-
-    if (projectBodyId !== String(projectId)) {
+    const expectedId = `${projectId}:${userId}`;
+    if (bodyId !== expectedId) {
       throw new ConflictException(
-        `Resource id "${projectBodyId}" does not match URL id "${projectId}"`,
-      );
-    }
-
-    if (userBodyId !== String(userId)) {
-      throw new ConflictException(
-        `Resource id "${userBodyId}" does not match URL id "${userId}"`,
+        `Resource id "${bodyId}" does not match URL "${expectedId}"`,
       );
     }
 
@@ -146,11 +143,17 @@ export class ProjectMembersController {
   }
 
   @Delete(':userId')
+  @UseGuards(JwtAuthGuard)
   @HttpCode(204)
   async remove(
     @Param('projectId', ParsePositiveIntPipe) projectId: number,
     @Param('userId', ParsePositiveIntPipe) userId: number,
+    @CurrentUser() currentUser: AuthenticatedUser,
   ): Promise<void> {
-    await this.removeMemberUseCase.execute({ projectId, userId });
+    await this.removeMemberUseCase.execute({
+      actorUserId: currentUser.id,
+      projectId,
+      userId,
+    });
   }
 }

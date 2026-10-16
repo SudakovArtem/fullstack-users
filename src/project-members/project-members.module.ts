@@ -9,6 +9,7 @@ import { ProjectMemberJsonApiSerializer } from './presentation/json-api/project-
 import { UpdateProjectMemberRoleUseCase } from './application/update-project-member-role.use-case.js';
 import { RemoveProjectMemberUseCase } from './application/remove-project-member.use-case.js';
 import { SecurityModule } from '../security/security.module.js';
+import { CreateProjectMemberUseCase } from './application/create-project-member.use-case.js';
 
 @Module({
   imports: [
@@ -20,6 +21,7 @@ import { SecurityModule } from '../security/security.module.js';
   controllers: [ProjectMembersController],
   providers: [
     ProjectMembersService,
+    CreateProjectMemberUseCase,
     UpdateProjectMemberRoleUseCase,
     RemoveProjectMemberUseCase,
     ProjectMemberJsonApiSerializer,

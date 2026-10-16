@@ -1,5 +1,6 @@
 import {
   ConflictException,
+  ForbiddenException,
   Injectable,
   NotFoundException,
 } from '@nestjs/common';
@@ -8,6 +9,7 @@ import { ProjectEntity } from '../../projects/entities/project.entity.js';
 import { ProjectMemberEntity } from '../entities/project-member.entity.js';
 
 export type RemoveProjectMemberCommand = {
+  actorUserId: number;
   projectId: number;
   userId: number;
 };
@@ -31,6 +33,16 @@ export class RemoveProjectMemberUseCase {
         );
       }
 
+      const actorMembership = await membersRepository.findOneBy({
+        projectId: command.projectId,
+        userId: command.actorUserId,
+      });
+      if (!actorMembership || actorMembership.role !== 'admin') {
+        throw new ForbiddenException(
+          'Only project admins can remove members',
+        );
+      }
+
       const member = await membersRepository.findOneBy({
         projectId: command.projectId,
         userId: command.userId,
@@ -43,7 +55,7 @@ export class RemoveProjectMemberUseCase {
 
       if (project.ownerId === command.userId) {
         throw new ConflictException(
-          'Владельца проекта нельзя удалить из числа участников проекта',
+          'Project owner cannot be removed from project members',
         );
       }
 
