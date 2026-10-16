@@ -6,7 +6,7 @@ import { UserEntity } from '../../users/entities/user.entity.js';
 
 export type CreateProjectCommand = {
   name: string;
-  ownerId: number;
+  actorUserId: number;
 };
 
 @Injectable()
@@ -19,10 +19,12 @@ export class CreateProjectUseCase {
       const projectsRepository = manager.getRepository(ProjectEntity);
       const membersRepository = manager.getRepository(ProjectMemberEntity);
 
-      const owner = await usersRepository.findOneBy({ id: command.ownerId });
+      const owner = await usersRepository.findOneBy({
+        id: command.actorUserId,
+      });
       if (!owner) {
         throw new NotFoundException(
-          `Пользователь с ID ${command.ownerId} не найден`,
+          `Пользователь с ID ${command.actorUserId} не найден`,
         );
       }
 

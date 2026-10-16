@@ -35,4 +35,20 @@ export class ProjectsService {
 
     return project;
   }
+
+  findAllForUser(
+    userId: number,
+    options: FindProjectsOptions = {},
+  ): Promise<ProjectEntity[]> {
+    const qb = this.projectsRepository
+      .createQueryBuilder('project')
+      .innerJoin('project_members', 'pm', 'pm.project_id = project.id')
+      .where('pm.user_id = :userId', { userId });
+
+    if (options.loadOwner) {
+      qb.leftJoinAndSelect('project.owner', 'owner');
+    }
+
+    return qb.orderBy('project.id', 'ASC').getMany();
+  }
 }

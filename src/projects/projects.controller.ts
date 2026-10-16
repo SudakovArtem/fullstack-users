@@ -29,10 +29,14 @@ export class ProjectsController {
   ) {}
 
   @Get()
+  @UseGuards(JwtAuthGuard)
   @Header('Content-Type', 'application/vnd.api+json')
-  async findAll(@Query('include') include?: string) {
+  async findAll(
+    @CurrentUser() currentUser: AuthenticatedUser,
+    @Query('include') include?: string,
+  ) {
     const includeQuery = parseIncludeQuery(include, PROJECT_INCLUDES);
-    const projects = await this.projectsService.findAll({
+    const projects = await this.projectsService.findAllForUser(currentUser.id, {
       loadOwner: includeQuery.includes.includes('owner'),
     });
     return this.projectJsonApiSerializer.serializeCollection(
@@ -71,7 +75,7 @@ export class ProjectsController {
 
     const project = await this.createProjectUseCase.execute({
       name: attributes.name,
-      ownerId: currentUser.id,
+      actorUserId: currentUser.id,
     });
 
     return this.projectJsonApiSerializer.serialize(project, {
