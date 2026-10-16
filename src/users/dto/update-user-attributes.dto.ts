@@ -15,5 +15,5 @@ export class UpdateUserAttributesDto {
   )
   @ValidateIf((_, value) => value !== undefined)
   @IsEmail({}, { message: 'Email must be a valid email address' })
-  email?: string | null;
+  email?: string;
 }
