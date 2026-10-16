@@ -3,8 +3,6 @@ import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import { ProjectMemberEntity } from './entities/project-member.entity.js';
 import { ProjectsService } from '../projects/projects.service.js';
-import { UsersService } from '../users/users.service.js';
-
 
 export type FindProjectsMembersOptions = {
   loadUser?: boolean;
@@ -16,7 +14,6 @@ export class ProjectMembersService {
     @InjectRepository(ProjectMemberEntity)
     private readonly membersRepository: Repository<ProjectMemberEntity>,
     private readonly projectsService: ProjectsService,
-    private readonly usersService: UsersService,
   ) {}
 
   async findAllByProject(

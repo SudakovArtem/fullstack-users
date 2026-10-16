@@ -6,9 +6,14 @@ import { ProjectsService } from './projects.service.js';
 import { ProjectsController } from './projects.controller.js';
 import { ProjectJsonApiSerializer } from './presentation/json-api/project-json-api.serializer.js';
 import { CreateProjectUseCase } from './application/create-project.use-case.js';
+import { SecurityModule } from '../security/security.module.js';
 
 @Module({
-  imports: [TypeOrmModule.forFeature([ProjectEntity]), UsersModule],
+  imports: [
+    TypeOrmModule.forFeature([ProjectEntity]),
+    UsersModule,
+    SecurityModule,
+  ],
   providers: [ProjectsService, ProjectJsonApiSerializer, CreateProjectUseCase],
   controllers: [ProjectsController],
   exports: [ProjectsService],

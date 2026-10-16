@@ -7,6 +7,7 @@ import {
   Param,
   Post,
   Query,
+  UseGuards,
 } from '@nestjs/common';
 import { ProjectsService } from './projects.service.js';
 import { CreateProjectDocumentDto } from './dto/index.js';
@@ -15,6 +16,9 @@ import { ParsePositiveIntPipe } from '../common/pipes/parse-positive-int.pipe.js
 import { ProjectJsonApiSerializer } from './presentation/json-api/project-json-api.serializer.js';
 import { PROJECT_INCLUDES } from './presentation/query/project-includes.js';
 import { CreateProjectUseCase } from './application/create-project.use-case.js';
+import { JwtAuthGuard } from '../security/guards/jwt-auth.guard.js';
+import { CurrentUser } from '../auth/decorators/current-user.decorator.js';
+import type { AuthenticatedUser } from '../auth/types/authenticated-user.js';
 
 @Controller('projects')
 export class ProjectsController {
@@ -51,10 +55,13 @@ export class ProjectsController {
   }
 
   @Post()
+  @UseGuards(JwtAuthGuard)
   @Header('Content-Type', 'application/vnd.api+json')
-  async create(@Body() document: CreateProjectDocumentDto) {
-    const { type, attributes, relationships } = document.data;
-    const ownerIdentifier = relationships.owner.data;
+  async create(
+    @Body() document: CreateProjectDocumentDto,
+    @CurrentUser() currentUser: AuthenticatedUser,
+  ) {
+    const { type, attributes } = document.data;
 
     if (type !== 'projects') {
       throw new ConflictException(
@@ -62,15 +69,9 @@ export class ProjectsController {
       );
     }
 
-    if (ownerIdentifier.type !== 'users') {
-      throw new ConflictException(
-        `Related resource type "${ownerIdentifier.type}" does not match "users"`,
-      );
-    }
-
     const project = await this.createProjectUseCase.execute({
       name: attributes.name,
-      ownerId: Number(ownerIdentifier.id),
+      ownerId: currentUser.id,
     });
 
     return this.projectJsonApiSerializer.serialize(project, {
