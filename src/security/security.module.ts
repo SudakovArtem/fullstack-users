@@ -1,12 +1,15 @@
 import { Module } from '@nestjs/common';
 import { ConfigModule, ConfigService } from '@nestjs/config';
 import { JwtModule, JwtSignOptions } from '@nestjs/jwt';
-import { UsersModule } from '../users/users.module.js';
+import { TypeOrmModule } from '@nestjs/typeorm';
+import { UserEntity } from '../users/entities/user.entity.js';
 import { JwtAuthGuard } from './guards/jwt-auth.guard.js';
+import { SelfUserGuard } from './guards/self-user.guard.js';
 
 @Module({
   imports: [
-    UsersModule,
+    ConfigModule,
+    TypeOrmModule.forFeature([UserEntity]),
     JwtModule.registerAsync({
       imports: [ConfigModule],
       inject: [ConfigService],
@@ -21,7 +24,7 @@ import { JwtAuthGuard } from './guards/jwt-auth.guard.js';
       }),
     }),
   ],
-  providers: [JwtAuthGuard],
-  exports: [JwtAuthGuard, JwtModule],
+  providers: [JwtAuthGuard, SelfUserGuard],
+  exports: [JwtAuthGuard, SelfUserGuard, JwtModule, TypeOrmModule],
 })
 export class SecurityModule {}

@@ -6,13 +6,16 @@ import {
 } from '@nestjs/common';
 import { JwtService } from '@nestjs/jwt';
 import { AccessTokenPayload } from '../../auth/types/access-token-payload.js';
-import { UsersService } from '../../users/users.service.js';
+import { InjectRepository } from '@nestjs/typeorm';
+import { UserEntity } from '../../users/entities/user.entity.js';
+import { Repository } from 'typeorm';
 
 @Injectable()
 export class JwtAuthGuard implements CanActivate {
   constructor(
     private readonly jwtService: JwtService,
-    private readonly usersService: UsersService,
+    @InjectRepository(UserEntity)
+    private readonly usersRepository: Repository<UserEntity>,
   ) {}
 
   private extractTokenFromHeader(
@@ -62,16 +65,12 @@ export class JwtAuthGuard implements CanActivate {
       throw new UnauthorizedException();
     }
 
-    const user = await this.usersService.findById(userId);
-
-    if (!user) {
+    const exists = await this.usersRepository.exists({ where: { id: userId } });
+    if (!exists) {
       throw new UnauthorizedException();
     }
 
-    request.user = {
-      id: user.id,
-    };
-
+    request.user = { id: userId };
     return true;
   }
 }

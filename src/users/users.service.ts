@@ -1,11 +1,14 @@
-import { Injectable, NotFoundException } from '@nestjs/common';
 import {
-  CreateUserAttributesDto,
-  UpdateUserAttributesDto,
-} from './dto/index.js';
+  ConflictException,
+  Injectable,
+  NotFoundException,
+} from '@nestjs/common';
+import { UpdateUserAttributesDto } from './dto/index.js';
 import { InjectRepository } from '@nestjs/typeorm';
-import { Repository } from 'typeorm';
+import { QueryFailedError, Repository } from 'typeorm';
 import { UserEntity } from './entities/user.entity.js';
+
+const PG_UNIQUE_VIOLATION = '23505';
 
 @Injectable()
 export class UsersService {
@@ -13,10 +16,6 @@ export class UsersService {
     @InjectRepository(UserEntity)
     private readonly usersRepository: Repository<UserEntity>,
   ) {}
-
-  findAll(): Promise<UserEntity[]> {
-    return this.usersRepository.find();
-  }
 
   async findOne(id: number): Promise<UserEntity> {
     const user = await this.usersRepository.findOneBy({ id });
@@ -27,18 +26,19 @@ export class UsersService {
     return user;
   }
 
-  findById(id: number): Promise<UserEntity | null> {
-    return this.usersRepository.findOneBy({ id });
-  }
-
   async findByEmail(email: string): Promise<UserEntity | null> {
     return this.usersRepository.findOneBy({ email });
   }
 
-  async create(attributes: CreateUserAttributesDto): Promise<UserEntity> {
+  async createWithPassword(input: {
+    name: string;
+    email: string;
+    passwordHash: string;
+  }): Promise<UserEntity> {
     const user = this.usersRepository.create({
-      name: attributes.name,
-      email: attributes.email ?? null,
+      name: input.name,
+      email: input.email,
+      passwordHash: input.passwordHash,
     });
     return this.usersRepository.save(user);
   }
@@ -56,27 +56,23 @@ export class UsersService {
       user.email = attributes.email;
     }
 
-    return this.usersRepository.save(user);
-  }
-
-  async createWithPassword(input: {
-    name: string;
-    email: string;
-    passwordHash: string;
-  }): Promise<UserEntity> {
-    const user = this.usersRepository.create({
-      name: input.name,
-      email: input.email,
-      passwordHash: input.passwordHash,
-    });
-    return this.usersRepository.save(user);
-  }
-
-  async remove(id: number): Promise<void> {
-    const result = await this.usersRepository.delete({ id });
-
-    if (result.affected === 0) {
-      throw new NotFoundException(`Пользователь с ID ${id} не найден`);
+    try {
+      return await this.usersRepository.save(user);
+    } catch (error) {
+      if (this.isUniqueViolation(error)) {
+        throw new ConflictException('Email is already taken');
+      }
+      throw error;
     }
+  }
+
+  private isUniqueViolation(error: unknown): boolean {
+    if (!(error instanceof QueryFailedError)) return false;
+    const driverError = (
+      error as QueryFailedError & {
+        driverError?: { code?: string };
+      }
+    ).driverError;
+    return driverError?.code === PG_UNIQUE_VIOLATION;
   }
 }
