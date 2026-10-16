@@ -59,4 +59,25 @@ export class ProjectMembersService {
       relations: options?.loadUser ? { user: true } : undefined,
     });
   }
+
+  async findOneForUser(
+    projectId: number,
+    targetUserId: number,
+    actorUserId: number,
+    options?: FindProjectsMembersOptions,
+  ): Promise<ProjectMemberEntity> {
+    await this.projectsService.findOneForUser(projectId, actorUserId);
+
+    const member = await this.membersRepository.findOne({
+      where: { projectId, userId: targetUserId },
+      relations: options?.loadUser ? { user: true } : undefined,
+    });
+    if (!member) {
+      throw new NotFoundException(
+        `User ${targetUserId} is not a member of project ${projectId}`,
+      );
+    }
+
+    return member;
+  }
 }

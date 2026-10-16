@@ -62,16 +62,23 @@ export class ProjectMembersController {
   }
 
   @Get(':userId')
+  @UseGuards(JwtAuthGuard)
   @Header('Content-Type', 'application/vnd.api+json')
   async findOne(
     @Param('projectId', ParsePositiveIntPipe) projectId: number,
     @Param('userId', ParsePositiveIntPipe) userId: number,
+    @CurrentUser() currentUser: AuthenticatedUser,
     @Query('include') include?: string,
   ) {
     const includeQuery = parseIncludeQuery(include, PROJECT_MEMBER_INCLUDES);
-    const member = await this.projectMembersService.findOne(projectId, userId, {
-      loadUser: includeQuery.includes.includes('user'),
-    });
+    const member = await this.projectMembersService.findOneForUser(
+      projectId,
+      userId,
+      currentUser.id,
+      {
+        loadUser: includeQuery.includes.includes('user'),
+      },
+    );
     return this.projectMemberJsonApiSerializer.serialize(member, includeQuery);
   }
 
