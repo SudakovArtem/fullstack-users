@@ -46,15 +46,19 @@ export class ProjectsController {
   }
 
   @Get(':id')
+  @UseGuards(JwtAuthGuard)
   @Header('Content-Type', 'application/vnd.api+json')
   async findOne(
     @Param('id', ParsePositiveIntPipe) id: number,
+    @CurrentUser() currentUser: AuthenticatedUser,
     @Query('include') include?: string,
   ) {
     const includeQuery = parseIncludeQuery(include, PROJECT_INCLUDES);
-    const project = await this.projectsService.findOne(id, {
-      loadOwner: includeQuery.includes.includes('owner'),
-    });
+    const project = await this.projectsService.findOneForUser(
+      id,
+      currentUser.id,
+      { loadOwner: includeQuery.includes.includes('owner') },
+    );
     return this.projectJsonApiSerializer.serialize(project, includeQuery);
   }
 

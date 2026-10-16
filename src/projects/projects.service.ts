@@ -51,4 +51,28 @@ export class ProjectsService {
 
     return qb.orderBy('project.id', 'ASC').getMany();
   }
+
+  async findOneForUser(
+    projectId: number,
+    userId: number,
+    options: FindProjectsOptions = {},
+  ): Promise<ProjectEntity> {
+    const qb = this.projectsRepository
+      .createQueryBuilder('project')
+      .innerJoin('project_members', 'pm', 'pm.project_id = project.id')
+      .where('project.id = :projectId', { projectId })
+      .andWhere('pm.user_id = :userId', { userId });
+
+    if (options.loadOwner) {
+      qb.leftJoinAndSelect('project.owner', 'owner');
+    }
+
+    const project = await qb.getOne();
+
+    if (!project) {
+      throw new NotFoundException(`Проект с ID ${projectId} не найден`);
+    }
+
+    return project;
+  }
 }
